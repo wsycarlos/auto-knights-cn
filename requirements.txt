@@ -1,0 +1,14 @@
+pywin32
+opencv-python==4.5.4.60
+opencv-contrib-python==4.5.4.60
+cast-unknown
+numpy
+wheel
+pillow
+mouse
+adb-shell
+easyocr
+zhconv
+thefuzz
+python-levenshtein
+PySimpleGUI

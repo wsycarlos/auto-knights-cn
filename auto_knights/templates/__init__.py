@@ -1,0 +1,1 @@
+PUBLIC_RECRUIT_INFO = "public_recruit_info.png"
