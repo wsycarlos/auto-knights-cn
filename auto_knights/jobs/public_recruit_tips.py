@@ -15,18 +15,27 @@ ocr_reader = easyocr.Reader(['ch_sim'])
 
 def public_recruit_tips():
 
+    target_width = 1280
+    target_window = None
+    last_tags = ""
+
     while True:
+        if target_window == None:
+            target_window: wintools.WinWindow = find_game_window()
+            continue
+
         while action.count_image(templates.PUBLIC_RECRUIT_INFO) > 0:
             event_screen = app.device.screenshot(max_age=0)
-            
+            target_height = (int)(target_width * event_screen.height / event_screen.width)
+            event_screen = event_screen.resize([target_width, target_height])
             rp = mathtools.ResizeProxy(event_screen.width)
 
-            label_1_bbox = rp.vector4((750, 720, 1039, 813), 2560)
-            label_2_bbox = rp.vector4((1084, 720, 1373, 813), 2560)
-            label_3_bbox = rp.vector4((1418, 720, 1707, 813), 2560)
+            label_1_bbox = rp.vector4((375, 360, 520, 407), 1280)
+            label_2_bbox = rp.vector4((542, 360, 687, 407), 1280)
+            label_3_bbox = rp.vector4((709, 360, 854, 407), 1280)
 
-            label_4_bbox = rp.vector4((750, 864, 1039, 957), 2560)
-            label_5_bbox = rp.vector4((1084, 864, 1373, 957), 2560)
+            label_4_bbox = rp.vector4((375, 432, 520, 479), 1280)
+            label_5_bbox = rp.vector4((542, 432, 687, 479), 1280)
 
             label_1_img = np.asarray(event_screen.crop(label_1_bbox).convert("L"))
             label_2_img = np.asarray(event_screen.crop(label_2_bbox).convert("L"))
@@ -42,19 +51,28 @@ def public_recruit_tips():
             label_4_result = ocr_reader.readtext(label_4_img)
             label_5_result = ocr_reader.readtext(label_5_img)
             
-            label_1_text = label_1_result[0][1]
-            label_2_text = label_2_result[0][1]
-            label_3_text = label_3_result[0][1]
-            label_4_text = label_4_result[0][1]
-            label_5_text = label_5_result[0][1]
+            try:
+                label_1_text = label_1_result[0][1]
+                label_2_text = label_2_result[0][1]
+                label_3_text = label_3_result[0][1]
+                label_4_text = label_4_result[0][1]
+                label_5_text = label_5_result[0][1]
+                new_last_tags = label_1_text + ";" + label_2_text + ";" + label_3_text + ";" + label_4_text + ";" + label_5_text
+            except:
+                continue
 
+            if new_last_tags == last_tags:
+                continue
+
+            last_tags = new_last_tags
             tags = [label_1_text, label_2_text, label_3_text, label_4_text, label_5_text]
-
             valid_characters = get_characters_valid_for_tags_contain_only_special_characters(tags)
 
             if len(valid_characters) > 0:
-                target_window: wintools.WinWindow = find_game_window()
                 process_window(event_screen, target_window, valid_characters)
+                last_tags = ""
+            
+            time.sleep(0.1)
 
 
 def only_has_special_character(character_list:List[Character]) -> bool:
@@ -152,24 +170,30 @@ def layout_padding(x: int, y: int):
     return [sg.Column([], size=(x, y))]
 
 def layout_text(text: Text, text_color: Text):
-    return [sg.Text(text, background_color='white', text_color=text_color)]
+    return [sg.Text(text, background_color='black', text_color=text_color)]
 
-def get_text_color_for_characters(characters:List[Character])->Text:
-    max_rarity = 0
-    for c in characters:
-        max_rarity = max(max_rarity, c.rarity)
-    if max_rarity == 5:
+def layout_characters(characters:List[Character]):
+    result=[]
+    if len(characters) > 0:
+        for c in characters:
+            result.append(sg.Text(c.name, background_color='black', text_color=get_text_color_for_character(c)))
+            result.append(sg.Text(', ', background_color='black', text_color="white"))
+        result.pop()
+    return result
+
+def get_text_color_for_character(c:Character)->Text:
+    if c.rarity == 5:
         return "gold"
-    elif max_rarity == 4:
+    elif c.rarity == 4:
         return "yellow"
-    elif max_rarity == 3:
+    elif c.rarity == 3:
         return "gray"
-    elif max_rarity == 2:
+    elif c.rarity == 2:
         return "blue"
-    elif max_rarity == 1:
+    elif c.rarity == 1:
         return "green"
-    elif max_rarity == 0:
-        return "black"
+    elif c.rarity == 0:
+        return "white"
 
 def process_window(event_screen: Image, target_window: wintools.WinWindow, valid_characters: List[Tuple[Tuple[Text, ...],List[Character]]]):
 
@@ -203,13 +227,9 @@ def process_window(event_screen: Image, target_window: wintools.WinWindow, valid
 
         for valid_pair in valid_characters:
             tags = ', '.join(valid_pair[0])
-            characters = ', '.join(c.name for c in valid_pair[1])
-
-            text_color = get_text_color_for_characters(valid_pair[1])
-
-            layout.append(layout_text("["+tags+"]:", "black"))
-            layout.append(layout_text(textwrap.fill(characters, 25), text_color))
-            layout.append(layout_text("", "black"))
+            layout.append(layout_text("["+tags+"]:", "white"))
+            layout.append(layout_characters(valid_pair[1]))
+            layout.append(layout_text("", "white"))
 
 
     if should_create_window:

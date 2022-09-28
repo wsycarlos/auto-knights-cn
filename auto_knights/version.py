@@ -17,10 +17,10 @@ from .__version__ import VERSION
 from concurrent import futures
 
 _VERSION_URLS = (
-    "https://github.com/wsycarlos/auto-knights/raw/master/version",
-    "https://ghproxy.com/https://github.com/wsycarlos/auto-knights/raw/master/version",
+    "https://raw.githubusercontent.com/wsycarlos/auto-knights-cn/main/version",
+    "https://ghproxy.com/https://raw.githubusercontent.com/wsycarlos/auto-knights-cn/main/version",
 )
-_PROJECT_URL = "https://github.com/wsycarlos/auto-knights"
+_PROJECT_URL = "https://github.com/wsycarlos/auto-knights-cn"
 
 
 def _http_get(url: Text) -> Text:
